@@ -109,7 +109,8 @@ function getInformationOfOneTranscription(transcriptionID,authorization){
           const responseOfOtherFetch = await getInformationOfOneTranscription(transcriptionID,authorization)
           resolve(responseOfOtherFetch)
         }else if(state == 'failed'){
-          console.log('> State is failed')
+          console.log('> State is failed\n')
+          console.log(informationOfTranscription)
           reject('Failed')
         }
       })
@@ -153,12 +154,15 @@ function getInformationOfExportedTranscription(authorization,exportID){
       .then(async exportedTranscription => {
         const { state } = exportedTranscription
 
-        if(state == 'pending' || state == 'processing' || state == 'expired' || state == 'failed'){
+        if(state == 'pending' || state == 'processing' || state == 'expired'){
           console.log(`> Awaiting 20 seconds because state is ${state}\n`)
           await sleep(20 * 1000)
           console.log(`> Doing other fetch because state is ${state}\n`)
           const responseOfOtherFetch = await getInformationOfExportedTranscription(authorization,exportID)
           resolve(responseOfOtherFetch)
+        }else if(state == 'failed'){
+          console.log('> State is failed\n')
+          reject('Failed')
         }
 
         console.log(`> The transcriptions with exportID:${exportID} was successfully exported\n\n`)
