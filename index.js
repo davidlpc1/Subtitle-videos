@@ -3,12 +3,14 @@ const fetch = require('node-fetch')
 const { exec, cp } = require('shelljs')
 const { v4: uuidV4 } = require('uuid')
 const fs = require('fs')
+const readlineSync = require('readline-sync')
 
 const authorization = `Bearer ${happy_scribe_key}`
-const nameOfVideoFile = 'wandavision'
-const typeOfVideoFile = '.mp4'
+const nameOfVideoFile = readlineSync.question('> What is the name of the video file: ')
+const typeOfVideoFile = '.' + readlineSync.question('> What is the type of the video file: ')
+const languageOfVideoFile = readlineSync.question('> What is the language of the video file: ')
 
-master(nameOfVideoFile,typeOfVideoFile,authorization)
+master(nameOfVideoFile,typeOfVideoFile,authorization,languageOfVideoFile)
 
 const Random = () => uuidV4()
 const sleep = async(time) => await new Promise(r => setTimeout(r, time));
@@ -172,23 +174,30 @@ function getInformationOfExportedTranscription(authorization,exportID){
   })
 }
 
-async function master(nameOfVideoFile,typeOfVideoFile,authorization){
-  const nameOfAudioFile = convertVideoToAudio(nameOfVideoFile,typeOfVideoFile)
-  const { signedUrl } = await createUrlOfAudioFile(nameOfAudioFile,authorization)
-  console.log(`> Signed url: ${signedUrl}\n`)
-  uploadFileInSignedUrl(nameOfAudioFile,signedUrl)
-  const { id:transcriptionID } = await createTranscription(nameOfAudioFile,'en-US',signedUrl,authorization)
-  console.log(`> Transcription ID: ${transcriptionID}\n`)
-  // const AllTranscriptions = await getAllTranscriptions(authorization)
-  // const transcriptionID = AllTranscriptions.results[0].id
-  console.log('> Awaiting 20 seconds to get information of transcription\n')
-  await sleep(20 * 1000)
-  const informationOfTranscription = await getInformationOfOneTranscription(transcriptionID,authorization)
-  if(informationOfTranscription.state == "failed") return console.log('> File failed to process\n')
-  const { id:exportID } = await exportTranscription(authorization,transcriptionID)
-  console.log(`> Export ID: ${exportID}\n`)
-  // const exportID = 'b9b70deb-c242-4b8e-88db-e224d1872c12'
-  const { download_link } = await getInformationOfExportedTranscription(authorization,exportID)
+async function master(nameOfVideoFile,typeOfVideoFile,authorization,languageOfVideoFile){
+  try{
+    const nameOfAudioFile = convertVideoToAudio(nameOfVideoFile,typeOfVideoFile)
+    const { signedUrl } = await createUrlOfAudioFile(nameOfAudioFile,authorization)
+    console.log(`> Signed url: ${signedUrl}\n`)
 
-  console.log(`> Go to ${download_link} and download the .srt file\n`)
+    uploadFileInSignedUrl(nameOfAudioFile,signedUrl)
+    
+    const { id:transcriptionID } = await createTranscription(nameOfAudioFile,languageOfVideoFile,signedUrl,authorization)
+    console.log(`> Transcription ID: ${transcriptionID}\n`)
+
+    console.log('> Awaiting 20 seconds to get information of transcription\n')
+    await sleep(20 * 1000)
+
+    const informationOfTranscription = await getInformationOfOneTranscription(transcriptionID,authorization)
+    if(informationOfTranscription.state == "failed") return console.log('> File failed to process\n')
+
+    const { id:exportID } = await exportTranscription(authorization,transcriptionID)
+    console.log(`> Export ID: ${exportID}\n`)
+
+    const { download_link } = await getInformationOfExportedTranscription(authorization,exportID)
+    console.log(`> Go to ${download_link} and download the .srt file\n`)
+  }catch(err){
+    console.log(`\n${err}\n`)
+  }
+
 }
