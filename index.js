@@ -15,17 +15,17 @@ master(nameOfVideoFile,typeOfVideoFile,authorization,languageOfVideoFile)
 const Random = () => uuidV4()
 const sleep = async(time) => await new Promise(r => setTimeout(r, time));
 
-async function convertVideoToAudio(nameOfVideoFile,typeOfVideoFile){
-  const nameOfAudioFile = `${nameOfVideoFile}.mp3`
-  if(!fs.existsSync(`./${nameOfAudioFile}`)){
-    const commandToConvertVideoToAudio = `ffmpeg -i ${nameOfVideoFile}${typeOfVideoFile} -b:a 16M -acodec libmp3lame ${nameOfAudioFile}`
-    await exec( commandToConvertVideoToAudio, { silent: true } )
+// async function convertVideoToAudio(nameOfVideoFile,typeOfVideoFile){
+//   const nameOfAudioFile = `${nameOfVideoFile}.mp3`
+//   if(!fs.existsSync(`./${nameOfAudioFile}`)){
+//     const commandToConvertVideoToAudio = `ffmpeg -i ${nameOfVideoFile}${typeOfVideoFile} -b:a 16M -acodec libmp3lame ${nameOfAudioFile}`
+//     await exec( commandToConvertVideoToAudio, { silent: true } )
 
-    console.log(`> ${nameOfAudioFile} created\n`)
-  }
+//     console.log(`> ${nameOfAudioFile} created\n`)
+//   }
 
-  return nameOfAudioFile
-}
+//   return nameOfAudioFile
+// }
 
 async function createUrlOfAudioFile(nameOfAudioFile,authorization){
   return new Promise((resolve,reject) => {
@@ -104,7 +104,7 @@ function getInformationOfOneTranscription(transcriptionID,authorization){
       .then(async informationOfTranscription => {
         const { state } = informationOfTranscription
 
-        if(state == 'initial' || state == 'locked' || state == 'ingesting'){
+        if(state == 'initial' || state == 'ingesting'){
           console.log(`> Awaiting 20 seconds because state is ${state}\n`)
           await sleep(20 * 1000)
           console.log(`> Doing other fetch because state is ${state}\n`)
@@ -176,7 +176,8 @@ function getInformationOfExportedTranscription(authorization,exportID){
 
 async function master(nameOfVideoFile,typeOfVideoFile,authorization,languageOfVideoFile){
   try{
-    const nameOfAudioFile = convertVideoToAudio(nameOfVideoFile,typeOfVideoFile)
+    // const nameOfAudioFile = convertVideoToAudio(nameOfVideoFile,typeOfVideoFile)
+    const nameOfAudioFile = `${nameOfVideoFile}${typeOfVideoFile}`
     const { signedUrl } = await createUrlOfAudioFile(nameOfAudioFile,authorization)
     console.log(`> Signed url: ${signedUrl}\n`)
 
